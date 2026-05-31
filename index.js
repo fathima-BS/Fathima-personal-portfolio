@@ -354,33 +354,52 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const name = document.getElementById('form-name').value.trim();
       const email = document.getElementById('form-email').value.trim();
-      const subject = document.getElementById('form-subject').value.trim();
       const message = document.getElementById('form-message').value.trim();
 
       // Basic validations
-      if (!name || !email || !subject || !message) {
+      if (!name || !email || !message) {
         showStatus('Please fill in all details.', 'error');
         return;
       }
 
-      // Mock submitting states
+      // Update submitting state
       submitBtn.disabled = true;
       submitBtn.textContent = 'Sending Message...';
-      
-      setTimeout(() => {
-        // Success response
+
+      // Submit to Google Form via AJAX (no-cors)
+      const formUrl = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSd91g89fnVAH9UpTdeY7e7yP5a4gefsMuQgUHtzTOV9u4YH9w/formResponse';
+      const formData = new URLSearchParams();
+      formData.append('entry.1708817253', name);
+      formData.append('entry.366536822', email);
+      formData.append('entry.934472489', message);
+
+      fetch(formUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      })
+      .then(() => {
         showStatus(`Thank you, ${name}! Your message has been sent successfully.`, 'success');
         contactForm.reset();
-        
+      })
+      .catch((error) => {
+        console.error('Error submitting form:', error);
+        showStatus('Something went wrong. Please try again later.', 'error');
+      })
+      .finally(() => {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Message';
-      }, 1500);
+      });
     });
   }
 
   function showStatus(msg, type) {
     formStatus.textContent = msg;
     formStatus.className = 'form-status'; // Reset styling
+    formStatus.style.display = ''; // Reset inline display setting from previous timeout
     formStatus.classList.add(type);
     
     // Auto clear status after 5 seconds
